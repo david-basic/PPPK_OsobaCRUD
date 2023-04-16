@@ -20,8 +20,7 @@ namespace PPPK_OsobaCRUD.Models
         [JsonProperty(PropertyName = "lastname")]
         public string LastName { get; set; }
         [Required]
-        [MinLength(11, ErrorMessage = "OIB can not be shorter than 11 characters")]
-        [MaxLength(11, ErrorMessage = "OIB can not be longer than 11 characters")]
+        [RegularExpression(@"^(\d{11})$", ErrorMessage = "OIB is a 11 digit number!")]
         [JsonProperty(PropertyName = "oib")]
         public string Oib { get; set; }
         [Required]

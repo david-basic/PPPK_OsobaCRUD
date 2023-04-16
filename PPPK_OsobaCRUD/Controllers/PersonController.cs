@@ -1,6 +1,10 @@
-﻿using System;
+﻿using PPPK_OsobaCRUD.Dao;
+using PPPK_OsobaCRUD.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -8,17 +12,17 @@ namespace PPPK_OsobaCRUD.Controllers
 {
     public class PersonController : Controller
     {
+        private static readonly ICosmosDbService service = CosmosDbServiceProvider.CosmosDbService;
+
         // GET: Person
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
-            return View();
+            return View(await service.GetPeopleAsync("SELECT * FROM Person"));
         }
 
         // GET: Person/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
+        public async Task<ActionResult> Details(string id)
+            => await ShowPerson(id);
 
         // GET: Person/Create
         public ActionResult Create()
@@ -28,62 +32,61 @@ namespace PPPK_OsobaCRUD.Controllers
 
         // POST: Person/Create
         [HttpPost]
-        public ActionResult Create(FormCollection collection)
+        public async Task<ActionResult> Create(Osoba person)
         {
-            try
+            if (ModelState.IsValid)
             {
-                // TODO: Add insert logic here
-
+                person.Id = Guid.NewGuid().ToString();
+                await service.AddPersonAsync(person);
                 return RedirectToAction("Index");
             }
-            catch
-            {
-                return View();
-            }
+
+            return View(person);
         }
 
         // GET: Person/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
+        public async Task<ActionResult> Edit(string id)
+            => await ShowPerson(id);
 
         // POST: Person/Edit/5
         [HttpPost]
-        public ActionResult Edit(int id, FormCollection collection)
+        public async Task<ActionResult> Edit(Osoba person)
         {
-            try
+            if (ModelState.IsValid)
             {
-                // TODO: Add update logic here
-
+                await service.UpdatePersonAsync(person);
                 return RedirectToAction("Index");
             }
-            catch
-            {
-                return View();
-            }
+
+            return View(person);
         }
 
         // GET: Person/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
+        public async Task<ActionResult> Delete(string id)
+            => await ShowPerson(id);
 
         // POST: Person/Delete/5
         [HttpPost]
-        public ActionResult Delete(int id, FormCollection collection)
+        public async Task<ActionResult> Delete(Osoba person)
         {
-            try
-            {
-                // TODO: Add delete logic here
+            await service.DeletePersonAsync(person);
+            return RedirectToAction("Index");
+        }
 
-                return RedirectToAction("Index");
-            }
-            catch
+        private async Task<ActionResult> ShowPerson(string id)
+        {
+            if (id == null)
             {
-                return View();
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+
+            var person = await service.GetPersonAsync(id);
+            if (person == null)
+            {
+                return HttpNotFound();
+            }
+
+            return View(person);
         }
     }
 }
